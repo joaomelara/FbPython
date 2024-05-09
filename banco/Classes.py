@@ -93,8 +93,8 @@ class Estudantil(Conta):
 
 tipo = input("Escolha o tipo de conta (Poupança(P), Corrente(C), Especial(S), Empresa(M), Estudantil(E)): ")
 
-# C1 = Corrente(0, 0, True, None)
-# C1 = Especial(0, 0, True, None, None)
+# 
+# 
 # C1 = Empresa(0, 0, True, None, None)
 # C1 = Estudantil(0, 0, True, None, None)
 if tipo.lower() == "p":
@@ -104,18 +104,22 @@ if tipo.lower() == "p":
         while movimentos <= 3:
             print("\n======= MENU =======")
             number = 0
-            print(number)
             print("1. Débito")
             print("2. Crédito")
-            op = int(input("Qual é a op?"))
+            op = int(input("Qual é a op?  "))
             if op == 1:
-                valor = int(input("Valor?\n\n"))
-                C1.debito(valor)
-                C1.mostrar()
-                movimentos +=1
+                if C1.saldo > 0:
+                    valor = int(input("Valor?  "))
+                    C1.debito(valor)
+                    C1.mostrar()
+                    movimentos +=1
+                elif C1.saldo == 0:
+                    print("Deposite primeiro, sem saldo")
+                    C1.mostrar()
+
             elif op == 2:
 
-                valor = int(input("Valor?\n\n"))
+                valor = int(input("Valor?  "))
                 C1.credito(valor)
                 C1.mostrar()
                 movimentos +=1
@@ -132,9 +136,84 @@ if tipo.lower() == "p":
                 
 
 
-#elif tipo.lower() == "c":
+elif tipo.lower() == "c":
+        movimentos = 0
+        C1 = Corrente(0, 0, True, None)
+
+        while movimentos <= 3:
+            print("\n======= MENU =======")
+            number = 0
+            print("1. Débito")
+            print("2. Crédito")
+            op = int(input("Qual é a op?  "))
+            if op == 1:
+                if C1.saldo > 0:
+                    valor = int(input("Valor?  "))
+                    C1.debito(valor)
+                    C1.mostrar()
+                    movimentos +=1
+                elif C1.saldo == 0:
+                    print("Deposite primeiro, sem saldo")
+                    C1.mostrar()
+
+            elif op == 2:
+
+                valor = int(input("Valor?  "))
+                C1.credito(valor)
+                C1.mostrar()
+                movimentos +=1
+                number +=1
+            else:
+                print("Coloca uma opcao decente bobao\n")
+                C1.mostrar
         
-# elif tipo.lower() == "s":
+        op = input("Deseja cheques?(S/N)  ")
+        if op.lower() == 's':
+            
+            qtd = int(input("Quantos precisas querido?  "))
+            
+            C1.pediTalao(qtd)
+            C1.mostrar()
+        else:
+            print("bye")
+        
+
+elif tipo.lower() == "s":
+    movimentos = 0
+    C1 = Especial(0,0,True,None)
+
+    while movimentos <= 3:
+            print("\n======= MENU =======")
+            number = 0
+            print("1. Débito")
+            print("2. Crédito")
+            op = int(input("Qual é a op?  "))
+            if op == 1:
+                if C1.saldo > 0:
+                    valor = int(input("Valor?  "))
+                    C1.debito(valor)
+                    C1.mostrar()
+                    movimentos +=1
+                elif C1.saldo == 0:
+                    print("Deposite primeiro, sem saldo")
+                    C1.mostrar()
+                elif C1.saldo < 0:
+                    C1.usarLimite()
+                    movimentos +=1
+
+
+            elif op == 2:
+
+                valor = int(input("Valor?  "))
+                C1.credito(valor)
+                C1.mostrar()
+                movimentos +=1
+                number +=1
+            else:
+                print("Coloca uma opcao decente bobao\n")
+                C1.mostrar()
+    
+
         
 # elif tipo.lower() == "m":
         
