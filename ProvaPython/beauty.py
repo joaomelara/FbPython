@@ -1,6 +1,5 @@
 import time
 import pymysql
-import os
 from Classe import ProdutoBeleza 
 from Classe import Usuario
 
@@ -10,6 +9,7 @@ con = pymysql.connect(
     password='fbradesco',
     database='beautystore'
 )
+
 carrinho = []
 
 print("1 - CADASTRAR USER")
@@ -22,7 +22,6 @@ op = input("Qual é a opção? ")
 while op != "4":
 
     if op == "1":
-        with con:
             while True:
                 with con.cursor() as cursor:
                     TABLE_NAME = "USUARIO"
@@ -65,8 +64,10 @@ while op != "4":
                             
                             senha = input("Informe a nova senha: ")
                             item = Usuario(email,senha)
-                            cursor.execute('UPDATE PRODUTO SET SENHA=%s WHERE EMAIL=%s', (item.senha, item.email))
+                            cursor.execute('UPDATE USUARIO SET SENHA=%s WHERE EMAIL=%s', (item.senha, item.email))
                             con.commit()
+                            print('USUARIO ALTERADO')
+                            time.sleep(2)
 
                         elif opc == '3':
                             print("-" * 20)
@@ -86,77 +87,110 @@ while op != "4":
                             print("Usuário deletado...")
                             time.sleep(1)
 
-    elif op == "2":
-        while True:
-            print("1 - CADASTRAR")
-            print("2 - ALTERAR")
-            print("3 - LISTAR")
-            print("4 - EXCLUIR")
-            print("5 - SAIR")
-            opc = input("Escolha uma opção: ")
-
-            if opc == '5':
-                time.sleep(2)
-                print("Até Breve...")
-                break
-
-            elif opc == '1':
-                print("-" * 20)
-                print("CADASTRAMENTO")
-                codigo = input("Digite o código do produto: ")
-                descricao = input('Digite a descrição/nome: ')
-                marca = input("Digite a marca: ")
-                valor = float(input("Digite o valor do produto : R$ "))
-                estoque = int(input("Digite o valor do estoque: "))
-                item = ProdutoBeleza(codigo, descricao, marca, valor, estoque)
+    elif op == '2':
+            while True:
                 with con.cursor() as cursor:
-                    cursor.execute(f'INSERT INTO produtobeleza (CODIGO, DESCRICAO, MARCA, VALOR, ESTOQUE)'
-                                   'VALUES (%s,%s,%s,%s,%s)',
-                                   (item.codigo, item.descricao, item.marca, item.valor, item.estoque))
+                    TABLE_NAME = "produtobeleza"
+                    cursor.execute(f'CREATE TABLE IF NOT EXISTS {TABLE_NAME} ('
+                                'id_produtobeleza INT AUTO_INCREMENT PRIMARY KEY ,'
+                                'CODIGO VARCHAR(50) ,'
+                                'DESCRICAO VARCHAR(50) ,'
+                                'MARCA VARCHAR(50) ,'
+                                'VALOR DOUBLE(10,2) ,'
+                                'ESTOQUE INT NOT NULL'  
+                    ')')
                     con.commit()
-                    print('PRODUTO CADASTRADO')
-                    time.sleep(2)
-
-            elif opc == '2':
-                print("-" * 20)
-                print("ALTERAÇÃO")
-                codigo = input("Digite o código do produto a ser modificado: ")
-                nova_descricao = input("Informe o novo nome/descrição do produto: ")
-                novo_valor = float(input("Informe o novo valor do produto: "))
-                with con.cursor() as cursor:
-                    cursor.execute('UPDATE produtobeleza SET DESCRICAO=%s, VALOR=%s WHERE CODIGO=%s', (nova_descricao, novo_valor, codigo))
-                    con.commit()
-                print("Produto alterado com sucesso!")
 
 
-            elif opc == '3':
-                print("-" * 20)
-                print("LISTAGEM")
-                with con.cursor() as cursor:
-                    cursor.execute("SELECT * FROM produtobeleza")
-                    resposta = cursor.fetchall()
-                    for linha in resposta:
-                        print(linha)
-                    time.sleep(3)
+                    with con.cursor() as cursor:
 
-            elif opc == '4':
-                print("-" * 20)
-                print("DELETE")
-                codigo = input("Digite o código do produto a ser deletado: ")
-                with con.cursor() as cursor:
-                    cursor.execute("DELETE FROM produtobeleza WHERE CODIGO = %s", (codigo,))
-                    con.commit()
-                    print("Produto deletado...")
-                    time.sleep(1)
+                        print("1 - CADASTRAR")
+                        print("2 - ALTERAR")
+                        print("3 - LISTAR")
+                        print("4 - EXCLUIR")
+                        print("5 - SAIR")
+                        opc = input("Escolha uma opção: ")
+
+                        if opc == '5':
+                            time.sleep(2)
+                            print("Até Breve...")
+                            break
+
+                        elif opc == '1':
+                            print("-" * 20)
+                            print("CADASTRAMENTO")
+                            codigo = input("Digite o código do produto: ")
+                            descricao = input('Digite a descrição/nome: ')
+                            marca = input("Digite a marca: ")
+                            valor = float(input("Digite o valor do produto : R$ "))
+                            estoque = int(input("Digite o valor do estoque: "))
+                            item = ProdutoBeleza(codigo, descricao, marca, valor, estoque)
+                            if item.adicionar_estoque(estoque):
+                                cursor.execute('INSERT INTO produtobeleza (CODIGO, DESCRICAO, MARCA, VALOR, ESTOQUE) VALUES (%s, %s, %s, %s, %s)',
+                                            (item.codigo, item.descricao, item.marca, item.valor, item.estoque))
+                                con.commit()
+                                print('PRODUTO CADASTRADO')
+                            else:
+                                print('Quantidade de estoque inválida. Deve ser entre 1 e 30.')
+                            time.sleep(2)
+
+                        elif opc == '2':
+                            print("-" * 20)
+                            print("ALTERAÇÃO")
+                            codigo = input("Digite o código do produto a ser modificado: ")
+                            descricao = input("Informe a nova descrição do produto: ")
+                            valor = float(input("Informe o novo valor do produto: "))
+                            quantidade = int(input("Informe a quantidade de estoque a ser adicionada: "))
+
+                            with con.cursor() as cursor:
+                                cursor.execute('SELECT ESTOQUE FROM PRODUTOBELEZA WHERE CODIGO=%s', (codigo,))
+                                produto = cursor.fetchone()
+                                
+                                if produto:
+                                    estoque_atual = produto[0]
+                                    item = ProdutoBeleza(codigo, descricao, '', valor, estoque_atual)
+                                    
+                                    if item.adicionar_estoque(quantidade):
+                                        cursor.execute('UPDATE PRODUTOBELEZA SET DESCRICAO=%s, VALOR=%s, ESTOQUE=%s WHERE CODIGO=%s',
+                                                    (descricao, valor, item.estoque, codigo))
+                                        con.commit()
+                                        print("PRODUTO ALTERADO COM SUCESSO")
+                                    else:
+                                        print('Quantidade de estoque inválida. Deve ser entre 1 e 30.')
+                                else:
+                                    print('Produto não encontrado.')
+                            time.sleep(2)
+
+
+                        elif opc == '3':
+                            print("-" * 20)
+                            print("LISTAGEM")
+                            with con.cursor() as cursor:
+                                cursor.execute("SELECT * FROM produtobeleza")
+                                resposta = cursor.fetchall()
+                                for linha in resposta:
+                                    print(linha)
+                                time.sleep(3)
+
+                        elif opc == '4':
+                            print("-" * 20)
+                            print("DELETE")
+                            codigo = input("Digite o código do produto a ser deletado: ")
+                            with con.cursor() as cursor:
+                                cursor.execute("DELETE FROM produtobeleza WHERE CODIGO = %s", (codigo,))
+                                con.commit()
+                                print("Produto deletado...")
+                                time.sleep(1)
     
     elif op == "3":
          with con.cursor() as cursor:
                         TABLE_NAME = "USUARIO"
                         email = (input("Digite o email da conta: "))
+                        senha = (input("Digite o senha da conta: "))
                         
                         # Verificar se a conta existe
-                        sql_verificar_conta = f'SELECT * FROM {TABLE_NAME} WHERE email = %s'
-                        cursor.execute(sql_verificar_conta, (email,))
+                        sql_verificar_conta = f'SELECT * FROM {TABLE_NAME} WHERE email = %s AND senha = %s'
+                        cursor.execute(sql_verificar_conta, (email,senha))
                         conta = cursor.fetchone()
 
                         if conta:
@@ -209,6 +243,7 @@ while op != "4":
                                                         total += valor * quantidade
                                                     else:
                                                         print(f"Não há estoque suficiente para o produto de código {codigo_produto}.")
+                                                        carrinho = []
                                                         break
                                                 else:
                                                     print(f"Produto de código {codigo_produto} não encontrado no banco de dados.")
@@ -221,7 +256,8 @@ while op != "4":
                                                     with con.cursor() as cursor:
                                                         cursor.execute("UPDATE produtobeleza SET ESTOQUE = ESTOQUE - %s WHERE CODIGO = %s", (quantidade, codigo_produto))
                                                         con.commit()
-                                                print("Compra confirmada. Estoque atualizado.")                                
+                                                print("Compra confirmada. Estoque atualizado.")
+                                                carrinho = []                            
                                 
                         else:
                             print("Conta não encontrada. Verifique o número da conta.")
@@ -235,3 +271,6 @@ while op != "4":
     op = input("Qual é a opção? ")
 
 print("Até Breve...")
+
+
+                       
